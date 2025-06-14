@@ -25,6 +25,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     done
   fi
 done < "$DECK_FILE"
+touch "$OUTPUT_DIR/.nojekyll"
 
 # Génération HTML
 cat <<EOF > "$OUTPUT_DIR/deck_preview.html"
@@ -54,3 +55,5 @@ cat <<EOF >> "$OUTPUT_DIR/deck_preview.html"
 </body>
 </html>
 EOF
+
+

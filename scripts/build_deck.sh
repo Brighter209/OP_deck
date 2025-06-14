@@ -78,10 +78,4 @@ montage "${IMAGE_LIST[@]/#/${OUTPUT_DIR}/}" \
 echo "📄 Génération du PDF..."
 magick "$OUTPUT_DIR/deck.png" "$OUTPUT_DIR/deck.pdf"
 
-# 🧹 Nettoyage des images individuelles
-echo "🧹 Suppression des images individuelles..."
-for img in "${IMAGE_LIST[@]}"; do
-  rm -f "$OUTPUT_DIR/$img"
-done
-
 echo "✅ Tout est prêt dans $OUTPUT_DIR/"

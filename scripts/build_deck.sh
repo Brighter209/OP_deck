@@ -4,19 +4,20 @@ set -euo pipefail
 
 DECK_FILE="${1:-decklist.deck}"
 OUTPUT_DIR="docs"
+PICTURE_DIR="$OUTPUT_DIR/pictures"
 
 if [[ ! -f "$DECK_FILE" ]]; then
   echo "❌ Fichier deck introuvable : $DECK_FILE"
   exit 1
 fi
 
-mkdir -p "$OUTPUT_DIR"
-rm -f "$OUTPUT_DIR"/*
+mkdir -p "$PICTURE_DIR"
+rm -f "$PICTURE_DIR"/* "$OUTPUT_DIR/deck.png" "$OUTPUT_DIR/deck.pdf" "$OUTPUT_DIR/deck_preview.html"
 
 declare -a IMAGE_LIST=()
 
 while IFS= read -r line || [[ -n "$line" ]]; do
-  line=$(echo "$line" | tr -d '\r')  # nettoyage Windows
+  line=$(echo "$line" | tr -d '\r')  # Nettoyage Windows
 
   [[ -z "$line" || "$line" =~ ^# ]] && continue
 
@@ -24,20 +25,22 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   CARD_CODE=$(echo "$line" | cut -dx -f2)
 
   URL="https://en.onepiece-cardgame.com/images/cardlist/card/${CARD_CODE}.png"
-  FILE="${OUTPUT_DIR}/${CARD_CODE}.png"
+  FILE="$PICTURE_DIR/${CARD_CODE}.png"
 
   echo "🔽 Téléchargement $CARD_CODE ($QTY×)..."
 
   if curl -s --fail -o "$FILE" "$URL"; then
     for ((i=0; i<QTY; i++)); do
-      IMAGE_LIST+=("$CARD_CODE.png")
+      COPY="$PICTURE_DIR/${CARD_CODE}_${i}.png"
+      cp "$FILE" "$COPY"
+      IMAGE_LIST+=("pictures/${CARD_CODE}_${i}.png")
     done
   else
     echo "❌ Échec du téléchargement : $CARD_CODE"
   fi
 done < "$DECK_FILE"
 
-# Génération de l'aperçu HTML
+# Génération HTML
 cat <<EOF > "$OUTPUT_DIR/deck_preview.html"
 <!DOCTYPE html>
 <html lang="en">
@@ -69,13 +72,12 @@ EOF
 # Désactive Jekyll
 touch "$OUTPUT_DIR/.nojekyll"
 
-# 🧱 Génère une image PNG globale
+# Génération image PNG globale
 echo "🖼️ Génération de l’image PNG..."
-montage "${IMAGE_LIST[@]/#/${OUTPUT_DIR}/}" \
-  -tile x -geometry +5+5 "$OUTPUT_DIR/deck.png"
+montage "${IMAGE_LIST[@]/#/$OUTPUT_DIR/}" -tile x -geometry +5+5 "$OUTPUT_DIR/deck.png"
 
-# 📄 Conversion en PDF
+# Conversion en PDF
 echo "📄 Génération du PDF..."
 magick "$OUTPUT_DIR/deck.png" "$OUTPUT_DIR/deck.pdf"
 
-echo "✅ Tout est prêt dans $OUTPUT_DIR/"
+echo "✅ Terminé. Fichiers générés dans : $OUTPUT_DIR/"

@@ -76,7 +76,7 @@ montage "${IMAGE_LIST[@]/#/${OUTPUT_DIR}/}" \
 
 # 📄 Conversion en PDF
 echo "📄 Génération du PDF..."
-convert "$OUTPUT_DIR/deck.png" "$OUTPUT_DIR/deck.pdf"
+magick "$OUTPUT_DIR/deck.png" "$OUTPUT_DIR/deck.pdf"
 
 # 🧹 Nettoyage des images individuelles
 echo "🧹 Suppression des images individuelles..."

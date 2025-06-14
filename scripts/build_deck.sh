@@ -2,8 +2,14 @@
 
 set -e
 
-DECK_FILE="decklist.deck"
+DECK_FILE="${1:-decklist.deck}"
 OUTPUT_DIR="docs"
+
+# 🧪 Vérifie si le fichier deck existe
+if [[ ! -f "$DECK_FILE" ]]; then
+  echo "❌ Fichier deck introuvable : $DECK_FILE"
+  exit 1
+fi
 
 mkdir -p "$OUTPUT_DIR"
 rm -f "$OUTPUT_DIR"/*
@@ -11,7 +17,10 @@ rm -f "$OUTPUT_DIR"/*
 declare -a IMAGE_LIST=()
 
 while IFS= read -r line || [[ -n "$line" ]]; do
-  [[ -z "$line" || "$line" =~ ^# ]] && continue
+  line=$(echo "$line" | tr -d '\r')  # Nettoyage fin de ligne Windows
+  echo "🔎 Ligne lue: '$line'"
+
+  [[ -z "$line" || "$line" =~ ^# ]] && continue  # Ignore vide/commentaires
 
   QTY=$(echo "$line" | cut -dx -f1)
   CARD_CODE=$(echo "$line" | cut -dx -f2)

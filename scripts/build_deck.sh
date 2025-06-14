@@ -1,11 +1,10 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 DECK_FILE="${1:-decklist.deck}"
 OUTPUT_DIR="docs"
 
-# 🧪 Vérifie si le fichier deck existe
 if [[ ! -f "$DECK_FILE" ]]; then
   echo "❌ Fichier deck introuvable : $DECK_FILE"
   exit 1
@@ -17,10 +16,9 @@ rm -f "$OUTPUT_DIR"/*
 declare -a IMAGE_LIST=()
 
 while IFS= read -r line || [[ -n "$line" ]]; do
-  line=$(echo "$line" | tr -d '\r')  # Nettoyage fin de ligne Windows
-  echo "🔎 Ligne lue: '$line'"
+  line=$(echo "$line" | tr -d '\r')  # nettoyage Windows
 
-  [[ -z "$line" || "$line" =~ ^# ]] && continue  # Ignore vide/commentaires
+  [[ -z "$line" || "$line" =~ ^# ]] && continue
 
   QTY=$(echo "$line" | cut -dx -f1)
   CARD_CODE=$(echo "$line" | cut -dx -f2)
@@ -39,7 +37,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   fi
 done < "$DECK_FILE"
 
-# Génération du HTML
+# Génération de l'aperçu HTML
 cat <<EOF > "$OUTPUT_DIR/deck_preview.html"
 <!DOCTYPE html>
 <html lang="en">
@@ -68,8 +66,22 @@ cat <<EOF >> "$OUTPUT_DIR/deck_preview.html"
 </html>
 EOF
 
-# Désactiver Jekyll
+# Désactive Jekyll
 touch "$OUTPUT_DIR/.nojekyll"
 
-echo "✅ Fichier HTML généré : $OUTPUT_DIR/deck_preview.html"
-echo "✅ Fichier .nojekyll ajouté pour GitHub Pages"
+# 🧱 Génère une image PNG globale
+echo "🖼️ Génération de l’image PNG..."
+montage "${IMAGE_LIST[@]/#/${OUTPUT_DIR}/}" \
+  -tile x -geometry +5+5 "$OUTPUT_DIR/deck.png"
+
+# 📄 Conversion en PDF
+echo "📄 Génération du PDF..."
+convert "$OUTPUT_DIR/deck.png" "$OUTPUT_DIR/deck.pdf"
+
+# 🧹 Nettoyage des images individuelles
+echo "🧹 Suppression des images individuelles..."
+for img in "${IMAGE_LIST[@]}"; do
+  rm -f "$OUTPUT_DIR/$img"
+done
+
+echo "✅ Tout est prêt dans $OUTPUT_DIR/"

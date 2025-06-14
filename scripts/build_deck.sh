@@ -19,15 +19,18 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   URL="https://en.onepiece-cardgame.com/images/cardlist/card/${CARD_CODE}.png"
   FILE="${OUTPUT_DIR}/${CARD_CODE}.png"
 
+  echo "🔽 Téléchargement $CARD_CODE ($QTY×)..."
+
   if curl -s --fail -o "$FILE" "$URL"; then
     for ((i=0; i<QTY; i++)); do
       IMAGE_LIST+=("$CARD_CODE.png")
     done
+  else
+    echo "❌ Échec du téléchargement : $CARD_CODE"
   fi
 done < "$DECK_FILE"
-touch "$OUTPUT_DIR/.nojekyll"
 
-# Génération HTML
+# Génération du HTML
 cat <<EOF > "$OUTPUT_DIR/deck_preview.html"
 <!DOCTYPE html>
 <html lang="en">
@@ -56,4 +59,8 @@ cat <<EOF >> "$OUTPUT_DIR/deck_preview.html"
 </html>
 EOF
 
+# Désactiver Jekyll
+touch "$OUTPUT_DIR/.nojekyll"
 
+echo "✅ Fichier HTML généré : $OUTPUT_DIR/deck_preview.html"
+echo "✅ Fichier .nojekyll ajouté pour GitHub Pages"
